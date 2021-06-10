@@ -1,0 +1,10 @@
+Flask==1.1.2
+flask-restful==0.3.8
+arrow
+nose
+pymongo
+requests
+flask_wtf
+flask_login
+wtforms
+passlib
