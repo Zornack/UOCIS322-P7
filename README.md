@@ -1,4 +1,4 @@
-# UOCIS322 - Project 5 #
+# UOCIS322 - Project 7 #
 Author: Jaryd Davis, jcsdavis@gmail.com
 
 An ACP brevet time calculator.
