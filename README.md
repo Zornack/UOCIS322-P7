@@ -1,100 +1,51 @@
-# UOCIS322 - Project 7 #
-Adding authentication and user interface to brevet time calculator service
+# UOCIS322 - Project 5 #
+Author: Jaryd Davis, jcsdavis@gmail.com
 
-## What is in this repository
+An ACP brevet time calculator.
 
-You have a minimal implementation of password- and token-based authentication modules in `DockerAuth` directory, and login forms in `DockerLogin`, using which you can create authenticated REST API-based services (as demonstrated in class), as well as a front end. 
+Supports user registration and authentication. Logging in genreates a token that is valid for 10 minutes. Upon token expiriation the user must log in again. 
 
-## IMPORTANT NOTES
+All API functions required a loged in user. 
 
-**MAKE SURE TO USE THE SOLUTION `acp_times.py` from Canvas for this project!**
+Username and hashed password stored in mongodb along with unique ID. 
 
-**MAKE SURE TO KEEP YOUR FILES in `brevets`! REMOVE `DockerRestAPI` after you're done!**
+Dockerfile included for ease of use with docker build and docker run.
 
-## Getting started 
+Distances input as miles are converted to kilometers then floored. Distances input as kilometers are rounded to the nearest digit.
 
-You will reuse *your* code from Project 6.
+Kilometer distances are converted to opening and closing times following the minimum and maximum speeds listed here: https://rusa.org/pages/acp-brevet-control-times-calculator
 
-Recall: you created the following three parts: 
+Opening and closing times are added to the user entered starting time.
 
-* You designed RESTful services to expose what is stored in MongoDB, and created the following:
+Negative distances return null values and an error message. Distances 20% longer than the brevet distance include an error message.
 
-** "http://<host:port>/listAll" should return all open and close times in the database
+acp_times calculates the opening and closing times and returns an arrow object
 
-** "http://<host:port>/listOpenOnly" should return open times only
+flask_brevets pulls km, brevet distance and starting time from the client, then returns the opening and closing times.
 
-** "http://<host:port>/listCloseOnly" should return close times only
+javascript updates the page asynchonrasly via AJAX and jQuery.
 
-* You also designed two different representations: one in csv and one in json. For the above, JSON should be your default representation. 
+Test calculations included for debugging. Run with nosetests. Edit tests/test_brev.py for further testing.
 
-** "http://<host:port>/listAll/csv" should return all open and close times in CSV format
+Insert adds km, open and close times to a database. Requires a valid final control. Inserting clears the last inserted values from the database.
 
-** "http://<host:port>/listOpenOnly/csv" should return open times only in CSV format
+Display renders a new page with the data from the database.
 
-** "http://<host:port>/listCloseOnly/csv" should return close times only in CSV format
+## Algorithm:
 
-** "http://<host:port>/listAll/json" should return all open and close times in JSON format
+Min and max speeds and their respective distances are stored in tuples in lists. 
 
-** "http://<host:port>/listOpenOnly/json" should return open times only in JSON format
+Open time pulls the start time from flask_brevets then finds the largest applicable speed range, calculates the elapsed hours from that bracket, then works down through the other brackets until complete. It returns the arrow object with the time shifted according to the calculated time.
 
-** "http://<host:port>/listCloseOnly/json" should return close times only in JSON format
+Close time is similar except it overrides the distance with the brevet distance if it is greater than the brevet distance and has hardcoded close times for the final control.
 
-* You also added a query parameter to get top "k" open and close times. For examples, see below.
+## API:
 
-** "http://<host:port>/listOpenOnly/csv?top=3" should return top 3 open times only (in ascending order) in CSV format 
+api.py retrives the open and clse times from mongodb and serves them in either JSON or CSV. The API supports listing all the open and close times, just the open or just the close. "?top=x" returns the first x entries of the database. 0 returns all. 
 
-** "http://<host:port>/listOpenOnly/json?top=5" should return top 5 open times only (in ascending order) in JSON format
+api_display.py allows easy use of this service. Upon clicking display the webpage is reloaded and the requested format, top entires and query type and returned. . 0 returns all the entires and negative numbers return an error. An empty database also returns an error. 
 
-* You'll also designed consumer programs (e.g., in jQuery) to expose the services.
 
-### Functionality you will add
+## Credits
 
-In this project, you will add the following functionalities:
-
-#### Part 1: Authenticating the services 
-
-- POST **/register**
-
-Registers a new user. On success a status code 201 is returned. The body of the response contains a JSON object with the newly added user. On failure status code 400 (bad request) is returned. Note: The password is hashed before it is stored in the database. Once hashed, the original password is discarded. Your database should have three fields: id (unique index), username and password for storing the credentials.
-
-- GET **/token**
-
-Returns a token. This request must be authenticated using a HTTP Basic Authentication (see `DockerAuth/password.py` and `DockerAuth/testToken.py`). On success a JSON object is returned with a field `token` set to the authentication token for the user and a field `duration` set to the (approximate) number of seconds the token is valid. On failure status code 401 (unauthorized) is returned.
-
-- GET **/RESOURCE-YOU-CREATED-IN-PROJECT-6**
-
-Return a protected <resource>, which is basically what you created in project 6. This request must be authenticated using token-based authentication only (see `DockerAuth/testToken.py`). HTTP password-based (basic) authentication is not allowed. On success a JSON object with data for the authenticated user is returned. On failure status code 401 (unauthorized) is returned.
-
-#### Part 2: User interface
-
-The goal of this part of the project is to create frontend/UI for Brevet app using Flask-WTF and Flask-Login introduced in lectures. You frontend/UI should use the authentication that you created above. In addition to creating UI for basic authentication and token generation, you will add three additional functionalities in your UI: a) registration, b) login, c) remember me, d) logout.
-
-#### Summary
-You will still maintain your `brevetsapp` service, and `mongodb` service that you've had since project 5, that will remain UNCHANGED.
-
-## Tasks
-
-You'll turn in your credentials.ini using which we will get the following:
-
-* The working application with two parts.
-
-* Dockerfile
-
-* docker-compose.yml
-
-## Grading Rubric
-
-* If your code works as expected: 100 points. This includes:
-    * Basic APIs work as expected in part 1.
-    * Decent user interface in part 2 including the three functionalities in the UI.
-
-* For each non-working API in part 1, 15 points will be docked off. Part 1 carries 45 points.
-
-* For the UI and the three functionalies, decent UI carries 15 points. Each functionality carries 10 points. In short, part 2 carries 45 points.
-
-* If none of them work, you'll get 10 points assuming
-    * `README` is updated with your name and email ID.
-    * `credentials.ini` is submitted with the correct URL of your repo.
-    * `docker-compose.yml` works/builds without any errors.
-
-* If the `docker-compose.yml` doesn't build or if `credentials.ini` is missing, 0 will be assigned.
+Michal Young, Ram Durairajan, Steven Walton, Joe Istas, Ali Hassani
