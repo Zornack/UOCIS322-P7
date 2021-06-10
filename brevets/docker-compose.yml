@@ -4,8 +4,6 @@ services:
     brevetsapp:
         build: ./brevetsapp
         command: python -u flask_brevets.py 
-        volumes:
-            - ./brevetsapp:/stuff
         ports:
             - "5002:5000"
         depends_on:
@@ -15,8 +13,6 @@ services:
             
     restapi:
         build: ./api
-        volumes:
-            - ./api:/stuff
         ports:
             - 5001:5000
         depends_on:
@@ -26,8 +22,6 @@ services:
             
     website:
         build: ./website
-        volumes:
-            - ./website:/stuff
         command: python -u api_display.py 
         ports:
             - "5000:5000"
